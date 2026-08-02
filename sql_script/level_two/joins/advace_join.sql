@@ -9,122 +9,114 @@ Scale: 8.0 → 10.0 (strict data engineering level)
 SECTION 1 – DATA VALIDATION
 ========================= */
 
-/*
-Q1 (8.5/10):
+/*Q1 (8.5/10):
 Detect customers where total Orders count ≠ total distinct OrderIDs after joining OrderLines.
 Tables:
-Sales.Orders, Sales.OrderLines, Sales.Customers
-*/
+Sales.Orders, Sales.OrderLines, Sales.Customers*/
 
-/*
-Q2 (8.0/10):
+SELECT 
+    o.CustomerID,
+    c.CustomerName,
+    COUNT(o.OrderID) AS TotalRowCount,
+    COUNT(DISTINCT o.OrderID) AS DistinctRowCount
+FROM Sales.Orders AS o  
+    LEFT JOIN Sales.OrderLines AS ol  
+ON o.OrderID = ol.OrderID  
+    LEFT JOIN Sales.Customers AS c  
+ON c.CustomerID = o.CustomerID 
+GROUP BY o.CustomerID , c.CustomerName 
+HAVING 
+    COUNT(o.OrderID) <> COUNT(DISTINCT o.OrderID);
+
+/*Q2 (8.0/10):
 Identify Orders where sum(OrderLines.Quantity) = 0 but order exists.
 Tables:
-Sales.Orders, Sales.OrderLines
-*/
+Sales.Orders, Sales.OrderLines*/
 
-/*
-Q3 (8.5/10):
+SELECT 
+    o.OrderID,
+    COALESCE(SUM(ol.Quantity),0) as quantity_count
+FROM Sales.Orders as o  
+    LEFT JOIN Sales.OrderLines as ol  
+ON o.OrderID = ol.OrderID
+    GROUP BY o.OrderID
+    HAVING COALESCE(SUM(ol.Quantity), 0) = 0 ;
+
+
+/*Q3 (8.5/10):
 Find Orders that multiply rows incorrectly due to duplicate StockItemID joins.
 Tables:
-Sales.OrderLines, Warehouse.StockItems
-*/
+Sales.OrderLines, Warehouse.StockItems*/
 
-/*
-Q4 (9.0/10):
+
+/*Q4 (9.0/10):
 Detect Customers where joining Orders causes row explosion > expected threshold.
 Tables:
-Sales.Customers, Sales.Orders
-*/
+Sales.Customers, Sales.Orders*/
 
-/*
-Q5 (8.5/10):
+/*Q5 (8.5/10):
 Validate that every Order has at least one OrderLine — return violations.
 Tables:
-Sales.Orders, Sales.OrderLines
-*/
+Sales.Orders, Sales.OrderLines*/
 
-/*
-Q6 (9.0/10):
+/*Q6 (9.0/10):
 Find Orders where joining to Customers produces multiple CustomerNames.
 Tables:
-Sales.Orders, Sales.Customers
-*/
+Sales.Orders, Sales.Customers*/
 
-/*
-Q7 (9.0/10):
+/*Q7 (9.0/10):
 Identify inconsistent joins where one OrderID maps to multiple CustomerIDs.
 Tables:
-Sales.Orders, Sales.OrderLines
-*/
+Sales.Orders, Sales.OrderLines*/
 
-/*
-Q8 (9.0/10):
+/*Q8 (9.0/10):
 Detect Orders where LEFT JOIN to Invoices produces duplicate InvoiceIDs.
 Tables:
-Sales.Orders, Sales.Invoices
-*/
+Sales.Orders, Sales.Invoices*/
 
-/*
-Q9 (9.5/10):
+/*Q9 (9.5/10):
 Find Orders where FULL JOIN between Orders and Invoices shows mismatch on both sides.
 Tables:
-Sales.Orders, Sales.Invoices
-*/
+Sales.Orders, Sales.Invoices*/
 
-/*
-Q10 (9.0/10):
+/*Q10 (9.0/10):
 Identify customers where total Orders (JOIN) > actual Orders table count.
 Tables:
-Sales.Customers, Sales.Orders
-*/
+Sales.Customers, Sales.Orders*/
 
-
-/* =========================
+/* ==============================
 SECTION 2 – NULL & JOIN BREAKS
-========================= */
+================================= */
 
-/*
-Q11 (9.0/10):
+/*Q11 (9.0/10):
 Find Customers where LEFT JOIN Orders returns NULL but Orders exist in system.
 Tables:
-Sales.Customers, Sales.Orders
-*/
+Sales.Customers, Sales.Orders*/
 
-/*
-Q12 (9.0/10):
+/*Q12 (9.0/10):
 Detect Orders where CustomerID exists but JOIN still produces NULL customer.
 Tables:
-Sales.Orders, Sales.Customers
-*/
+Sales.Orders, Sales.Customers*/
 
-/*
-Q13 (9.5/10):
+/*Q13 (9.5/10):
 Identify rows where FULL JOIN produces NULL on both sides incorrectly.
 Tables:
-Sales.Orders, Sales.Invoices
-*/
+Sales.Orders, Sales.Invoices*/
 
-/*
-Q14 (8.5/10):
+/*Q14 (8.5/10):
 Find Orders where RIGHT JOIN removes valid Orders unexpectedly.
 Tables:
-Sales.Orders, Sales.Customers
-*/
+Sales.Orders, Sales.Customers*/
 
-/*
-Q15 (9.5/10):
+/*Q15 (9.5/10):
 Detect cases where LEFT JOIN + WHERE filter behaves as INNER JOIN.
 Tables:
-Sales.Customers, Sales.Orders
-*/
+Sales.Customers, Sales.Orders*/
 
-/*
-Q16 (9.5/10):
+/*Q16 (9.5/10):
 Find rows where NULL propagation hides real data due to incorrect join order.
 Tables:
-Sales.Orders, Sales.OrderLines, Warehouse.StockItems
-*/
+Sales.Orders, Sales.OrderLines, Warehouse.StockItems*/
 
 /*
 Q17 (9.0/10):
