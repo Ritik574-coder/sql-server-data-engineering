@@ -14,19 +14,23 @@ Detect customers where total Orders count ≠ total distinct OrderIDs after join
 Tables:
 Sales.Orders, Sales.OrderLines, Sales.Customers*/
 
+
 SELECT 
     o.CustomerID,
     c.CustomerName,
-    COUNT(o.OrderID) AS TotalRowCount,
-    COUNT(DISTINCT o.OrderID) AS DistinctRowCount
-FROM Sales.Orders AS o  
-    LEFT JOIN Sales.OrderLines AS ol  
-ON o.OrderID = ol.OrderID  
-    LEFT JOIN Sales.Customers AS c  
-ON c.CustomerID = o.CustomerID 
-GROUP BY o.CustomerID , c.CustomerName 
+    COUNT(DISTINCT o.OrderID) as distinct_order_count,
+    COUNT(o.OrderID) as order_count
+FROM Sales.Orders as o  
+LEFT JOIN Sales.OrderLines as ol 
+    ON o.OrderID = ol.OrderID 
+LEFT JOIN Sales.Customers as c  
+    ON o.CustomerID = c.CustomerID 
+GROUP BY 
+    o.CustomerID , c.CustomerName 
 HAVING 
-    COUNT(o.OrderID) <> COUNT(DISTINCT o.OrderID);
+    COUNT(o.OrderID) <> COUNT(DISTINCT o.OrderID) 
+ORDER BY 
+    o.CustomerID ASC ;
 
 /*Q2 (8.0/10):
 Identify Orders where sum(OrderLines.Quantity) = 0 but order exists.
@@ -35,19 +39,44 @@ Sales.Orders, Sales.OrderLines*/
 
 SELECT 
     o.OrderID,
-    COALESCE(SUM(ol.Quantity),0) as quantity_count
+    COALESCE(SUM(ol.Quantity), 0) as total_quentity
 FROM Sales.Orders as o  
-    LEFT JOIN Sales.OrderLines as ol  
-ON o.OrderID = ol.OrderID
-    GROUP BY o.OrderID
-    HAVING COALESCE(SUM(ol.Quantity), 0) = 0 ;
-
+LEFT JOIN Sales.OrderLines as ol 
+    ON o.OrderID = ol.OrderID 
+GROUP BY o.OrderID
+HAVING 
+    COALESCE(SUM(ol.Quantity), 0) = 0 ;
 
 /*Q3 (8.5/10):
 Find Orders that multiply rows incorrectly due to duplicate StockItemID joins.
 Tables:
 Sales.OrderLines, Warehouse.StockItems*/
 
+WITH before_join AS(
+    SELECT 
+        OrderID,
+        COUNT(*) as row_before
+    FROM Sales.OrderLines as ol 
+    GROUP BY OrderID
+),
+after_join AS(
+    SELECT 
+        ol.OrderID,
+        COUNT(*) as row_after
+    FROM Sales.OrderLines as ol 
+    INNER JOIN Warehouse.StockItems as st  
+        ON ol.StockItemID = st.StockItemID 
+    GROUP BY ol.OrderID
+)
+SELECT 
+    bj.OrderID,
+    bj.row_before,
+    aj.row_after,
+    aj.row_after - bj.row_before as multiple_rows 
+FROM before_join AS bj 
+INNER JOIN after_join as aj 
+    ON bj.OrderID = aj.OrderID 
+WHERE aj.row_after > bj.row_before ;
 
 /*Q4 (9.0/10):
 Detect Customers where joining Orders causes row explosion > expected threshold.
