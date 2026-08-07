@@ -13,80 +13,93 @@ SECTION 1 – DATA VALIDATION
 Detect customers where total Orders count ≠ total distinct OrderIDs after joining OrderLines.
 Tables:
 Sales.Orders, Sales.OrderLines, Sales.Customers*/
-
-
 SELECT 
     o.CustomerID,
     c.CustomerName,
     COUNT(DISTINCT o.OrderID) as distinct_order_count,
-    COUNT(o.OrderID) as order_count
+    COUNT(ol.OrderID) as order_count
 FROM Sales.Orders as o  
-LEFT JOIN Sales.OrderLines as ol 
+INNER JOIN Sales.OrderLines as ol  
     ON o.OrderID = ol.OrderID 
-LEFT JOIN Sales.Customers as c  
-    ON o.CustomerID = c.CustomerID 
-GROUP BY 
-    o.CustomerID , c.CustomerName 
-HAVING 
-    COUNT(o.OrderID) <> COUNT(DISTINCT o.OrderID) 
-ORDER BY 
-    o.CustomerID ASC ;
+INNER JOIN Sales.Customers as c  
+    ON o.CustomerID = c.CustomerID
+GROUP BY o.CustomerID, c.CustomerName
+HAVING COUNT(ol.OrderID) <> COUNT(DISTINCT o.OrderID) 
+ORDER BY o.CustomerID ASC ; 
+ 
 
 /*Q2 (8.0/10):
 Identify Orders where sum(OrderLines.Quantity) = 0 but order exists.
 Tables:
 Sales.Orders, Sales.OrderLines*/
-
 SELECT 
     o.OrderID,
-    COALESCE(SUM(ol.Quantity), 0) as total_quentity
+    COALESCE(SUM(ol.Quantity), 0) as order_quentity 
 FROM Sales.Orders as o  
 LEFT JOIN Sales.OrderLines as ol 
     ON o.OrderID = ol.OrderID 
-GROUP BY o.OrderID
-HAVING 
-    COALESCE(SUM(ol.Quantity), 0) = 0 ;
+GROUP BY o.OrderID 
+HAVING COALESCE(SUM(ol.Quantity), 0) = 0 ;
+
 
 /*Q3 (8.5/10):
 Find Orders that multiply rows incorrectly due to duplicate StockItemID joins.
 Tables:
 Sales.OrderLines, Warehouse.StockItems*/
-
 WITH before_join AS(
     SELECT 
         OrderID,
-        COUNT(*) as row_before
-    FROM Sales.OrderLines as ol 
-    GROUP BY OrderID
+        COUNT(*) before_count
+    FROM Sales.OrderLines
+    GROUP BY OrderID 
 ),
-after_join AS(
+after_join AS (
     SELECT 
         ol.OrderID,
-        COUNT(*) as row_after
-    FROM Sales.OrderLines as ol 
-    INNER JOIN Warehouse.StockItems as st  
-        ON ol.StockItemID = st.StockItemID 
+        COUNT(*) as after_count
+    FROM Sales.OrderLines as oL  
+    INNER JOIN Warehouse.StockItems as s  
+        ON ol.StockItemID = s.StockItemID
     GROUP BY ol.OrderID
 )
 SELECT 
     bj.OrderID,
-    bj.row_before,
-    aj.row_after,
-    aj.row_after - bj.row_before as multiple_rows 
-FROM before_join AS bj 
+    bj.before_count,
+    aj.after_count
+FROM before_join as bj 
 INNER JOIN after_join as aj 
     ON bj.OrderID = aj.OrderID 
-WHERE aj.row_after > bj.row_before ;
+WHERE aj.after_count > bj.before_count ;
+
 
 /*Q4 (9.0/10):
-Detect Customers where joining Orders causes row explosion > expected threshold.
+Detect Customers where joining Orders causes row explosion > expected threshold 130.
 Tables:
 Sales.Customers, Sales.Orders*/
+SELECT 
+    c.CustomerID,
+    c.CustomerName,
+    COUNT(o.OrderID) as total_orders 
+FROM Sales.Customers as c 
+INNER JOIN Sales.Orders as o  
+    ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerID, c.CustomerName 
+HAVING COUNT(o.OrderID) > 130;
+
 
 /*Q5 (8.5/10):
 Validate that every Order has at least one OrderLine — return violations.
 Tables:
 Sales.Orders, Sales.OrderLines*/
+SELECT 
+    o.OrderID
+FROM Sales.Orders as o 
+WHERE NOT EXISTS
+(
+    SELECT 1 
+    FROM Sales.OrderLines as ol 
+    WHERE  o.OrderID = ol.OrderID
+) ;
 
 /*Q6 (9.0/10):
 Find Orders where joining to Customers produces multiple CustomerNames.
