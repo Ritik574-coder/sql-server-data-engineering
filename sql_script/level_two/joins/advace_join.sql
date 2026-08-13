@@ -105,6 +105,15 @@ WHERE NOT EXISTS
 Find Orders where joining to Customers produces multiple CustomerNames.
 Tables:
 Sales.Orders, Sales.Customers*/
+SELECT 
+    o.OrderID,
+    COUNT(DISTINCT c.CustomerName) as name_count
+FROM Sales.Orders as o 
+INNER JOIN Sales.Customers as c  
+    ON o.CustomerID = c.CustomerID
+GROUP BY o.OrderID 
+HAVING COUNT(DISTINCT c.CustomerName) > 1 ;
+
 
 /*Q7 (9.0/10):
 Identify inconsistent joins where one OrderID maps to multiple CustomerIDs.
