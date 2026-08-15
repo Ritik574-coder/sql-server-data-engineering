@@ -16,6 +16,46 @@ INNER JOIN sys.columns c2
     AND fkc.referenced_column_id = c2.column_id
 ORDER BY Child_Table;
 
+
+
+
+SELECT 
+    fk.name AS FK_Name,
+    sch_child.name AS Child_Schema,
+    OBJECT_NAME(fk.parent_object_id) AS Child_Table,
+    c1.name AS Child_Column,
+    sch_parent.name AS Parent_Schema,
+    OBJECT_NAME(fk.referenced_object_id) AS Parent_Table,
+    c2.name AS Parent_Column
+FROM sys.foreign_keys fk
+INNER JOIN sys.foreign_key_columns fkc 
+    ON fk.object_id = fkc.constraint_object_id
+INNER JOIN sys.columns c1 
+    ON fkc.parent_object_id = c1.object_id 
+    AND fkc.parent_column_id = c1.column_id
+INNER JOIN sys.columns c2 
+    ON fkc.referenced_object_id = c2.object_id 
+    AND fkc.referenced_column_id = c2.column_id
+INNER JOIN sys.tables t_child
+    ON fk.parent_object_id = t_child.object_id
+INNER JOIN sys.tables t_parent
+    ON fk.referenced_object_id = t_parent.object_id
+INNER JOIN sys.schemas sch_child
+    ON t_child.schema_id = sch_child.schema_id
+INNER JOIN sys.schemas sch_parent
+    ON t_parent.schema_id = sch_parent.schema_id
+ORDER BY 
+    Child_Schema,
+    Child_Table;
+
+
+
+
+
+
+
+
+
 --get all PK info 
 SELECT 
     t.name AS Table_Name,
@@ -69,3 +109,13 @@ WHERE OBJECT_NAME(fk.parent_object_id) = 'Orders'
 EXEC sp_help 'Sales.Orders';
 
 
+SELECT 
+    ss.schema_id,
+    ss.name as schema_name,
+    st.name as table_name 
+FROM sys.schemas as ss 
+INNER JOIN sys.tables as st  
+ON ss.schema_id = st.schema_id ;
+
+SELECT *
+FROM sys.dm_db_index_usage_stats;

@@ -99,7 +99,17 @@ GROUP BY sc.CustomerID
 HAVING COUNT(so.OrderID) < 1
 
 --9. Get all orders with CustomerName and ContactPerson name.
+SELECT 
+    o.OrderID,
+    c.CustomerName,
+    p.FullName as ContactPersonName
+FROM Sales.Orders as o
+INNER JOIN Sales.Customers as c 
+ON o.CustomerID = c.CustomerID
+INNER JOIN Application.People p 
+ON  o.ContactPersonID = p.PersonID ;
 
+SELECT TOP 10 * FROM Application.People ;
 --10. Get all order lines with StockItem name.
 --
 --11. Get OrderID and total number of items in that order.
