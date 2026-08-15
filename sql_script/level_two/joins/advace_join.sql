@@ -114,11 +114,12 @@ INNER JOIN Sales.Customers as c
 GROUP BY o.OrderID 
 HAVING COUNT(DISTINCT c.CustomerName) > 1 ;
 
-
 /*Q7 (9.0/10):
 Identify inconsistent joins where one OrderID maps to multiple CustomerIDs.
 Tables:
 Sales.Orders, Sales.OrderLines*/
+
+
 
 /*Q8 (9.0/10):
 Detect Orders where LEFT JOIN to Invoices produces duplicate InvoiceIDs.
