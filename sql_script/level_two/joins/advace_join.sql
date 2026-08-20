@@ -118,13 +118,19 @@ HAVING COUNT(DISTINCT c.CustomerName) > 1 ;
 Identify inconsistent joins where one OrderID maps to multiple CustomerIDs.
 Tables:
 Sales.Orders, Sales.OrderLines*/
-
+SELECT
+    o.OrderID,
+    COUNT(DISTINCT o.CustomerID) as CustomerCount  
+FROM Sales.Orders AS o
+GROUP BY o.OrderID
+HAVING COUNT(DISTINCT o.CustomerID) > 1 ;
 
 
 /*Q8 (9.0/10):
 Detect Orders where LEFT JOIN to Invoices produces duplicate InvoiceIDs.
 Tables:
 Sales.Orders, Sales.Invoices*/
+
 
 /*Q9 (9.5/10):
 Find Orders where FULL JOIN between Orders and Invoices shows mismatch on both sides.
