@@ -109,7 +109,6 @@ ON o.CustomerID = c.CustomerID
 INNER JOIN Application.People p 
 ON  o.ContactPersonID = p.PersonID ;
 
-SELECT TOP 10 * FROM Application.People ;
 --10. Get all order lines with StockItem name.
 --
 --11. Get OrderID and total number of items in that order.
